@@ -24,6 +24,8 @@ export interface GameState {
   latestNarrative: { title: string; text: string; truthText?: string }[];
   scoutReturnLast: number;
   ending?: EndingResult;
+  /** 结局是否正在等待 LLM 生成覆盖 */
+  endingPending: boolean;
   sleepMessage: string;
   trustWarning: boolean;
 }
@@ -35,7 +37,9 @@ export type GameAction =
   | { type: "CONTINUE"; decision: TurnDecision }
   | { type: "AWAKEN_DONE" }
   | { type: "BACK_TO_DECISION" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "SET_NARRATIVE"; narrative: { title: string; text: string; truthText?: string }[] }
+  | { type: "SET_ENDING"; ending: EndingResult };
 
 // ── 初始状态 ──────────────────────────────────────────────
 export const initialGameState: GameState = {
@@ -44,6 +48,7 @@ export const initialGameState: GameState = {
   history: { entries: [] },
   latestNarrative: [],
   scoutReturnLast: 0,
+  endingPending: false,
   sleepMessage: "你进入了深度睡眠，思绪万千，不知再睁眼时世界是何模样……",
   trustWarning: false,
 };
@@ -62,8 +67,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         activePop: state.world.activePop + state.world.frozenPop,
         frozenPop: 0,
       };
+      // 规则兜底结局，LLM 生成成功后会通过 SET_ENDING 覆盖
       const ending = new RuleBasedEndingProvider().buildEnding(settledWorld, state.history);
-      return { ...state, phase: "ending", world: settledWorld, ending };
+      return { ...state, phase: "ending", world: settledWorld, ending, endingPending: true };
     }
 
 
@@ -93,6 +99,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         scoutReturnLast: turnResult.scoutReturn,
         sleepMessage:    sleepMsg,
         trustWarning,
+        endingPending:   gameOver ? true : state.endingPending,
       };
     }
 
@@ -101,6 +108,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "BACK_TO_DECISION":
       return { ...state, phase: "decision" };
+
+    case "SET_NARRATIVE":
+      return { ...state, latestNarrative: action.narrative };
+
+    case "SET_ENDING":
+      return { ...state, ending: action.ending, endingPending: false };
 
     case "RESET":
       return initialGameState;

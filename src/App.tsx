@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import AwakenScreen from "./components/AwakenScreen";
 import DecisionScreen from "./components/DecisionScreen";
 import EndScreen from "./components/EndScreen";
 import SleepTransition from "./components/SleepTransition";
 import { gameReducer, initialGameState } from "./state/gameStore";
+import { getLLMNarrative } from "./game/narrative/llmProvider";
+import { buildLLMEnding } from "./game/ending/llmProvider";
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
@@ -11,6 +13,11 @@ export default function App() {
   const [sleepingYears, setSleepingYears] = useState(100);
 
   const [sendScout, setSendScout] = useState(true);
+
+  // 防止重复触发 LLM 请求
+  const narrativeFiredRef = useRef(false);
+  const endingFiredRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   // ── 60秒倒计时（decision 阶段） ──────────────────────────
   useEffect(() => {
@@ -37,6 +44,81 @@ export default function App() {
       });
     }
   }, [secondsLeft, state.phase, sleepingYears, sendScout]);
+
+  // ── sleep 阶段：触发 LLM 叙述生成 ────────────────────────
+  useEffect(() => {
+    if (state.phase !== "sleep") return;
+
+    if (narrativeFiredRef.current) return;
+    narrativeFiredRef.current = true;
+
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    const fallback = state.latestNarrative;
+
+    // 并行等待 LLM + 最短展示时间 2.4s
+    const llmPromise = getLLMNarrative(
+      state.world,
+      state.scoutReturnLast,
+      fallback,
+    );
+
+    Promise.all([
+      llmPromise,
+      new Promise((r) => setTimeout(r, 2400)),
+    ])
+      .then(([narrative]) => {
+        if (abort.signal.aborted) return;
+        dispatch({ type: "SET_NARRATIVE", narrative });
+        dispatch({ type: "AWAKEN_DONE" });
+      })
+      .catch(() => {
+        if (abort.signal.aborted) return;
+        // 失败也继续（已有种子兜底在 latestNarrative 中）
+        dispatch({ type: "AWAKEN_DONE" });
+      });
+
+    return () => {
+      abort.abort();
+    };
+  }, [state.phase, state.world.era.id]); // era.id 变化 = 新一轮
+
+  // ── ending / game_over 阶段：触发 LLM 千年史生成 ────────
+  useEffect(() => {
+    if (!state.endingPending) return;
+
+    if (endingFiredRef.current) return;
+    endingFiredRef.current = true;
+
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    buildLLMEnding(state.world, state.history)
+      .then((ending) => {
+        if (abort.signal.aborted) return;
+        dispatch({ type: "SET_ENDING", ending });
+      })
+      .catch(() => {
+        if (abort.signal.aborted) return;
+        // 规则兜底已在 SETTLE_ALL / game_over 时写入
+        if (state.ending) {
+          dispatch({ type: "SET_ENDING", ending: state.ending });
+        }
+      });
+
+    return () => {
+      abort.abort();
+    };
+  }, [state.endingPending]);
+
+  // ── 重置 ref 标志（RESET 后） ────────────────────────────
+  useEffect(() => {
+    if (state.phase === "intro") {
+      narrativeFiredRef.current = false;
+      endingFiredRef.current = false;
+    }
+  }, [state.phase]);
 
   // ── 叙述（决策阶段显示上一轮叙述，首轮显示时代介绍） ────
   const narrative = useMemo(() => {
@@ -96,7 +178,7 @@ export default function App() {
   }
 
   if (state.phase === "game_over") {
-    const failEnding = {
+    const failEnding = state.ending ?? {
       outcome: "failure" as const,
       title: `${state.world.era.name}——政变爆发`,
       text: "民心归零，移民内部的信任彻底崩溃。这次迁移没有到达终点，但留下了不会被遗忘的痕迹。",
@@ -106,14 +188,26 @@ export default function App() {
         `· 活跃人口：${state.world.activePop.toLocaleString()}`,
         `· 民心归零，政变终结了这次旅程`,
         ``,
-        `（未来版本将由 AI 续写这段历史的余韵。）`,
+        `（正在生成 AI 千年发展史…）`,
       ],
     };
-    return <EndScreen ending={failEnding} onReset={() => dispatch({ type: "RESET" })} />;
+    return (
+      <EndScreen
+        ending={failEnding}
+        loading={state.endingPending}
+        onReset={() => dispatch({ type: "RESET" })}
+      />
+    );
   }
 
   if (state.phase === "ending" && state.ending) {
-    return <EndScreen ending={state.ending} onReset={() => dispatch({ type: "RESET" })} />;
+    return (
+      <EndScreen
+        ending={state.ending}
+        loading={state.endingPending}
+        onReset={() => dispatch({ type: "RESET" })}
+      />
+    );
   }
 
   // decision 阶段

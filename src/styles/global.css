@@ -218,6 +218,16 @@ button:active { transform: scale(0.97); }
   cursor: pointer;
 }
 .range-hint { font-size: 0.78rem; color: var(--c-muted); }
+.sleep-warning {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--c-warn);
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(246, 173, 85, 0.1);
+  border-left: 3px solid var(--c-warn);
+  border-radius: 0 0.4rem 0.4rem 0;
+}
 
 .scout-toggle {
   display: flex;
@@ -397,6 +407,24 @@ button:active { transform: scale(0.97); }
 
 .end-hint  { margin: 0; font-size: 0.82rem; }
 .end-reset { align-self: center; margin-top: 0.5rem; }
+.end-reset:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.end-loading {
+  animation: endPulse 1.5s ease-in-out infinite;
+  font-style: italic;
+  color: var(--c-muted);
+}
+
+.end-loading-hint {
+  animation: endPulse 1.5s ease-in-out infinite;
+  margin: 0;
+  padding: 1rem 0;
+}
+
+@keyframes endPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
 
 /* ─────────────────────────────────────────────────────────
    Responsive

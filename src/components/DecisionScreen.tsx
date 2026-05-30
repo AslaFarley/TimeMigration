@@ -104,10 +104,15 @@ export default function DecisionScreen({
               onChange={(e) => setSleepingYears(Number(e.target.value))}
               className="range-slider"
             />
-            <span className="range-hint">
-              短睡（100年·安全）= 渐进探索；长睡（1000年·有损耗）= 大跨度冒险
+          <span className="range-hint">
+            短睡（100年·安全）= 渐进探索；长睡（1000年·有损耗）= 大跨度冒险
+          </span>
+          {sleepingYears > 400 && (
+            <span className="sleep-warning">
+              ⚠ 长睡超过400年将导致显著人口损耗（{Math.round((sleepingYears / 1000) * 30)}%），建交后可减半。
             </span>
-          </label>
+          )}
+        </label>
 
 
           <label className={`scout-toggle${!canSendScout ? " scout-toggle--disabled" : ""}`}>
