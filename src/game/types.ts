@@ -3,6 +3,9 @@
 // 详见 DESIGN.md 第 4/5 节
 // ─────────────────────────────────────────────────────────
 
+/** 时代质量分类 */
+export type EraQuality = "good" | "neutral" | "bad";
+
 /** 时代类型 */
 export type EraType =
   | "war_aftermath"
@@ -16,7 +19,29 @@ export type EraType =
   | "revival"
   | "totalitarian"
   | "void"
-  | "primordial";
+  | "primordial"
+  | "desert_expansion"
+  | "flood_refuge"
+  | "nomadic_revival"
+  | "laboratory_enclave"
+  | "digital_utopia"
+  | "iron_despotism"
+  | "cult_awakening"
+  | "trade_renaissance"
+  | "seasteading"
+  | "underground_arcology"
+  | "solar_punk"
+  | "genetic_divergence"
+  | "info_blackout"
+  | "terraforming_dawn"
+  | "neo_feudalism"
+  | "oceanic_collapse"
+  | "forgotten_monolith"
+  | "echo_chamber"
+  | "nuclear_autumn"
+  | "glacier_walkers"
+  | "megastructure_ruins"
+  | "stellar_exodus";
 
 /**
  * 叙述者风格（影响公开文本的偏差方向）
@@ -35,6 +60,8 @@ export interface EraProfile {
   id: EraType;
   name: string;
   description: string;
+  /** 时代质量：good / neutral / bad */
+  quality: EraQuality;
   /** 客观环境好坏（天灾维度），0-100 */
   baseHabitability: number;
   /** 原住文明欢迎度（人祸维度），0-100 */

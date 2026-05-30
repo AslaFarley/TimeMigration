@@ -7,19 +7,10 @@ interface Props {
   loading?: boolean;
 }
 
-const OUTCOME_LABELS: Record<EndingResult["outcome"], string> = {
-  success: "文明延续",
-  failure: "迁移失控",
-  rebirth: "文明重生",
-};
-
 export default function EndScreen({ ending, onReset, loading }: Props) {
   return (
     <div className="center-layout">
       <section className="panel end-panel">
-        <div className={`end-badge end-badge--${ending.outcome}`}>
-          {OUTCOME_LABELS[ending.outcome]}
-        </div>
         <h1 className="end-title">{ending.title}</h1>
         <p className={`end-text${loading ? " end-loading" : ""}`}>
           {loading ? "正在生成千年发展史……" : ending.text}

@@ -7,7 +7,7 @@ export interface SeedEntry {
   truthHint: string;
 }
 
-export const SEED_LIBRARY: Record<EraType, Record<NarrativeTone, SeedEntry[]>> = {
+export const SEED_LIBRARY: Partial<Record<EraType, Record<NarrativeTone, SeedEntry[]>>> = {
   war_aftermath: {
     reliable: [
       { title: "余烬未冷", text: "战火刚刚平息，幸存者在废墟中寻找食物与庇护。任何人口迁入都可能引发资源争夺，但至少已经没有轰炸。", truthHint: "宜居/接纳极低，数据可信" },

@@ -91,7 +91,7 @@ export default function DecisionScreen({
           {sleepsExhausted ? (
             <>睡眠次数已耗尽，只能 <strong>全体解冻</strong></>
           ) : (
-            <>当前第 <strong>{world.eraIndex + 1}</strong> 个时代 · 最多还能睡眠 <strong>{sleepsRemaining}</strong> 次</>
+            <>最多还能睡眠 <strong>{sleepsRemaining}</strong> 次</>
           )}
         </div>
 

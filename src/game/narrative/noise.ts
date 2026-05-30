@@ -47,7 +47,10 @@ export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLin
   const tone = state.era.tone;
   // 若已识破说谎者，liar 降级为 reliable
   const effectiveTone = (state.liarExposed && tone === "liar") ? "reliable" : tone;
-  const pool = SEED_LIBRARY[state.era.id][effectiveTone];
+  const eraSeeds = SEED_LIBRARY[state.era.id];
+  // 若该时代无种子，回退到 war_aftermath 种子库
+  const fallback = SEED_LIBRARY["war_aftermath"];
+  const pool = (eraSeeds ?? fallback)![effectiveTone] ?? fallback!.reliable;
   const seed = pick(pool, state.eraIndex + state.sleepingYears);
 
   // 叙述者风格附注

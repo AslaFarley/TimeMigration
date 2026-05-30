@@ -2,6 +2,7 @@
  * 游戏状态管理（useReducer）
  * 完整历史轨迹从第一版起就被记录，供未来 LLM 上下文使用。
  */
+import { resetEraPool } from "@/game/eras";
 import { advanceWorld, createInitialWorld, isGameOver } from "@/game/worldEngine";
 import { RuleBasedEndingProvider } from "@/game/ending/ruleEnding";
 import type { EndingResult, GameHistory, TurnDecision, WorldState } from "@/game/types";
@@ -118,6 +119,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, ending: action.ending, endingPending: false };
 
     case "RESET":
+      resetEraPool();
       return initialGameState;
 
     default:
