@@ -65,6 +65,22 @@ export default function DecisionScreen({
           <StatBadge label="活跃人口" value={world.activePop} />
         </div>
 
+        {/* 永久buff徽章 */}
+        {(world.allianceFormed || world.liarExposed) && (
+          <div className="perk-badges">
+            {world.allianceFormed && (
+              <span className="perk-badge perk-badge--alliance" title="已与原住文明建交，长睡损耗减半">
+                🤝 建交
+              </span>
+            )}
+            {world.liarExposed && (
+              <span className="perk-badge perk-badge--exposed" title="已识破谎言型叙述者，其信息不再反转">
+                👁 识谎
+              </span>
+            )}
+          </div>
+        )}
+
         {/* 民心预警 */}
         {trustWarning && (
           <div className="warning-banner">
@@ -81,15 +97,18 @@ export default function DecisionScreen({
             <span>睡眠时长：<strong>{sleepingYears} 年</strong></span>
             <input
               type="range"
-              min={1}
-              max={25}
-              step={1}
+              min={100}
+              max={1000}
+              step={100}
               value={sleepingYears}
               onChange={(e) => setSleepingYears(Number(e.target.value))}
               className="range-slider"
             />
-            <span className="range-hint">短睡 = 渐进探索；长睡 = 大跨度冒险</span>
+            <span className="range-hint">
+              短睡（100年·安全）= 渐进探索；长睡（1000年·有损耗）= 大跨度冒险
+            </span>
           </label>
+
 
           <label className={`scout-toggle${!canSendScout ? " scout-toggle--disabled" : ""}`}>
             <input
@@ -106,6 +125,12 @@ export default function DecisionScreen({
           {sendScout && canSendScout && (
             <p className="scout-hint muted">
               先遣队将自动改造下一时代的最薄弱参数，归队后并入活跃人口并带回真实损耗率情报。
+              {!world.allianceFormed && world.era.baseAcceptance >= 60 && (
+                <> 当前接纳度高，派出可<b>建交</b>以永久降低长睡损耗。</>
+              )}
+              {!world.liarExposed && world.era.tone === "liar" && (
+                <> 当前叙述者不可靠，派出可<b>识破谎言</b>。</>
+              )}
             </p>
           )}
         </div>

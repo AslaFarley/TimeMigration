@@ -16,6 +16,15 @@ const TRUST_WARNING = 25;
 /** 民心归零即视为失败（由 UI 层判断） */
 export const TRUST_FAILURE = 0;
 
+/** 长睡损耗系数（1000年损耗约30%） */
+const SLEEP_DECAY_FACTOR = 0.30;
+/** 建交后损耗减半 */
+const ALLIANCE_DECAY_REDUCTION = 0.5;
+/** 建交触发阈值：接纳度 ≥ 60 且派出先遣队 */
+const ALLIANCE_ACCEPTANCE_THRESHOLD = 60;
+/** 每 300 年推进 1 个时代 */
+const YEARS_PER_STEP = 300;
+
 // ── 辅助 ──────────────────────────────────────────────────
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
@@ -64,6 +73,8 @@ export function createInitialWorld(): WorldState {
     activePop:     0,
     scoutForce:    0,
     sleepingYears: 1,
+    allianceFormed: false,
+    liarExposed:    false,
   };
 }
 
@@ -72,10 +83,12 @@ export function createInitialWorld(): WorldState {
  * 每轮结算：
  *  1) 先遣队归队 + 注入 activePop
  *  2) activePop *= f(...)
- *  3) 先遣队任务效果 → 作用于下一时代参数
- *  4) 推进到下一时代（混合当前值与新时代基准）
- *  5) 超载 → 渐进损耗 trust
- *  6) 生成叙述 + 历史条目
+ *  3) 检测建交/识谎触发
+ *  4) 计算长睡损耗（建交减半）
+ *  5) 先遣队任务效果 → 作用于下一时代参数
+ *  6) 推进到下一时代（线性不循环，300年/级）
+ *  7) 超载 → 渐进损耗 trust
+ *  8) 生成叙述 + 历史条目
  */
 export function advanceWorld(
   state: WorldState,
@@ -89,7 +102,10 @@ export function advanceWorld(
     ? Math.min(SCOUT_SIZE, state.frozenPop)
     : 0;
 
-  const next: WorldState = { ...state, sleepingYears: decision.sleepingYears };
+  const next: WorldState = {
+    ...state,
+    sleepingYears: decision.sleepingYears,
+  };
 
   if (scoutSent > 0) {
     next.frozenPop  = safeRound(next.frozenPop - scoutSent);
@@ -107,11 +123,48 @@ export function advanceWorld(
   // 硬性上限：不超过承载力 2 倍
   next.activePop = Math.min(next.activePop, next.capacity * 2);
 
-  // ③ 先遣队任务效果（作用于推进后的时代参数）
+  // ── ③ 建交检测（在当前时代，推进前） ──
+  let allianceFormedThisTurn = false;
+  if (
+    !next.allianceFormed &&
+    scoutSent > 0 &&
+    state.era.baseAcceptance >= ALLIANCE_ACCEPTANCE_THRESHOLD
+  ) {
+    next.allianceFormed = true;
+    allianceFormedThisTurn = true;
+  }
+
+  // ── ④ 识谎检测（在当前时代，推进前） ──
+  let liarExposedThisTurn = false;
+  if (
+    !next.liarExposed &&
+    scoutSent > 0 &&
+    state.era.tone === "liar" &&
+    scoutReturn > 0
+  ) {
+    next.liarExposed = true;
+    liarExposedThisTurn = true;
+  }
+
+  // ── ⑤ 长睡损耗（建交后减半） ──
+  let baseDecay = clamp(
+    (decision.sleepingYears / 1000) * SLEEP_DECAY_FACTOR,
+    0,
+    SLEEP_DECAY_FACTOR,
+  );
+  if (next.allianceFormed) {
+    baseDecay *= ALLIANCE_DECAY_REDUCTION;
+  }
+  const sleepLoss = safeRound(next.activePop * baseDecay);
+  next.activePop = safeRound(next.activePop - sleepLoss);
+  // 冷冻人口也在长睡中损耗
+  next.frozenPop = safeRound(next.frozenPop * (1 - baseDecay));
+
+  // ⑥ 先遣队任务效果（作用于推进后的时代参数）
   const missionTarget = pickMissionTarget(next);
 
-  // ④ 推进到下一时代
-  const steps = Math.max(1, Math.round(decision.sleepingYears / 5));
+  // ⑦ 推进到下一时代（线性不循环，每300年1级）
+  const steps = Math.max(1, Math.round(decision.sleepingYears / YEARS_PER_STEP));
   const newEraIndex = state.eraIndex + steps;
   const newEra = createEra(newEraIndex);
   next.eraIndex = newEraIndex;
@@ -124,7 +177,7 @@ export function advanceWorld(
   next.capacity     = safeRound(next.capacity * 0.4 + newEra.baseCapacity     * 0.6);
   next.trust        = clamp(next.trust        * 0.4 + newEra.baseTrust        * 0.6, 0, 100);
 
-  // ③ 先遣队任务效果（叠加在混合后的新时代上）
+  // ⑧ 先遣队任务效果（叠加在混合后的新时代上）
   if (scoutSent > 0) {
     if (missionTarget === "acceptance") {
       next.acceptance = clamp(next.acceptance + SCOUT_MISSION_BONUS, 0, 100);
@@ -133,7 +186,7 @@ export function advanceWorld(
     }
   }
 
-  // ⑤ 超载 → 渐进损耗 trust + 轻微人口损耗
+  // ⑨ 超载 → 渐进损耗 trust + 轻微人口损耗
   if (next.activePop > next.capacity) {
     const overload = next.activePop - next.capacity;
     const trustDrain = Math.min(12, overload / 5000);
@@ -146,7 +199,7 @@ export function advanceWorld(
     next.trust = clamp(next.trust - 2.5, 0, 100);
   }
 
-  // ⑥ 叙述
+  // ⑩ 叙述
   const narrative = narrativeProvider.getNarrative(next, scoutReturn);
 
   const historyEntry = {
@@ -166,6 +219,9 @@ export function advanceWorld(
       trust:        next.trust,
     },
     narrative: narrative[0]?.text ?? "",
+    allianceFormedThisTurn,
+    liarExposedThisTurn,
+    sleepLoss,
   };
 
   return { state: next, narrative, historyEntry, scoutReturn };

@@ -155,4 +155,39 @@ export const SEED_LIBRARY: Record<EraType, Record<NarrativeTone, SeedEntry[]>> =
       { title: "繁华都市", text: "这里人潮涌动，秩序良好，基础设施完善，几乎无需担忧任何生存问题。", truthHint: "反向，实际荒芜" },
     ],
   },
+  primordial: {
+    reliable: [
+      {
+        title: "寂静地球",
+        text: "城市已成废墟残骸，森林重新占领大陆。气候温和但没有任何科技支撑，人类必须从零开始。",
+        truthHint: "宜居度恢复但无技术设施，数据可信",
+      },
+      {
+        title: "原始复苏",
+        text: "生态已经自我修复，空气清新、水源洁净。但没有道路、没有电网、没有任何文明的痕迹。",
+        truthHint: "承载力取决于自然资源，无接纳度概念",
+      },
+    ],
+    optimistic: [
+      {
+        title: "新伊甸",
+        text: "这是一张白纸！人类文明将以更智慧的方式重新书写，没有过去的错误，只有无限的可能。",
+        truthHint: "过度乐观，实际重建极其艰难",
+      },
+    ],
+    pessimistic: [
+      {
+        title: "终末孤寂",
+        text: "无论曾经何等辉煌，最终只剩风声。这是宇宙对文明傲慢的最终回答。",
+        truthHint: "偏悲观，但自然环境确实已恢复",
+      },
+    ],
+    liar: [
+      {
+        title: "繁荣依旧",
+        text: "城市灯火通明，文明从未中断，一切如常运转。你只是做了一个漫长的梦。",
+        truthHint: "完全虚假，实际文明已灭绝",
+      },
+    ],
+  },
 };

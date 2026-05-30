@@ -12,27 +12,16 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
     baseTrust: 72,
     tone: "optimistic",
   },
-  war: {
-    id: "war",
-    name: "战乱年代",
-    description: "冲突四起，城邦易碎，任何人口流动都伴随代价。",
-    baseHabitability: 45,
-    baseAcceptance: 32,
-    baseTech: 38,
-    baseCapacity: 50000,
-    baseTrust: 28,
-    tone: "pessimistic",
-  },
-  ecological_collapse: {
-    id: "ecological_collapse",
-    name: "生态崩溃",
-    description: "气候失衡，土地贫瘠，生存本身就是赌博。",
-    baseHabitability: 18,
-    baseAcceptance: 40,
-    baseTech: 22,
-    baseCapacity: 18000,
-    baseTrust: 36,
-    tone: "liar",
+  revival: {
+    id: "revival",
+    name: "复兴纪元",
+    description: "废墟中重新长出秩序，世界缓慢恢复呼吸。",
+    baseHabitability: 66,
+    baseAcceptance: 68,
+    baseTech: 54,
+    baseCapacity: 76000,
+    baseTrust: 66,
+    tone: "reliable",
   },
   tech_singularity: {
     id: "tech_singularity",
@@ -56,6 +45,17 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
     baseTrust: 42,
     tone: "optimistic",
   },
+  totalitarian: {
+    id: "totalitarian",
+    name: "极权时代",
+    description: "秩序高压而稳定，接纳度常被压到最低。",
+    baseHabitability: 54,
+    baseAcceptance: 18,
+    baseTech: 64,
+    baseCapacity: 68000,
+    baseTrust: 22,
+    tone: "liar",
+  },
   winter: {
     id: "winter",
     name: "寒冬时代",
@@ -65,6 +65,17 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
     baseTech: 30,
     baseCapacity: 22000,
     baseTrust: 33,
+    tone: "pessimistic",
+  },
+  war: {
+    id: "war",
+    name: "战乱年代",
+    description: "冲突四起，城邦易碎，任何人口流动都伴随代价。",
+    baseHabitability: 45,
+    baseAcceptance: 32,
+    baseTech: 38,
+    baseCapacity: 50000,
+    baseTrust: 28,
     tone: "pessimistic",
   },
   plague: {
@@ -78,26 +89,15 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
     baseTrust: 26,
     tone: "liar",
   },
-  revival: {
-    id: "revival",
-    name: "复兴纪元",
-    description: "废墟中重新长出秩序，世界缓慢恢复呼吸。",
-    baseHabitability: 66,
-    baseAcceptance: 68,
-    baseTech: 54,
-    baseCapacity: 76000,
-    baseTrust: 66,
-    tone: "reliable",
-  },
-  totalitarian: {
-    id: "totalitarian",
-    name: "极权时代",
-    description: "秩序高压而稳定，接纳度常被压到最低。",
-    baseHabitability: 54,
-    baseAcceptance: 18,
-    baseTech: 64,
-    baseCapacity: 68000,
-    baseTrust: 22,
+  ecological_collapse: {
+    id: "ecological_collapse",
+    name: "生态崩溃",
+    description: "气候失衡，土地贫瘠，生存本身就是赌博。",
+    baseHabitability: 18,
+    baseAcceptance: 40,
+    baseTech: 22,
+    baseCapacity: 18000,
+    baseTrust: 36,
     tone: "liar",
   },
   void: {
@@ -111,23 +111,36 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
     baseTrust: 14,
     tone: "pessimistic",
   },
+  primordial: {
+    id: "primordial",
+    name: "洪荒重启",
+    description: "人类文明已荡然无存，地球回归原始自然。寂静中，唯有风与水的循环依旧。",
+    baseHabitability: 50,
+    baseAcceptance: 0,
+    baseTech: 0,
+    baseCapacity: 30000,
+    baseTrust: 40,
+    tone: "reliable",
+  },
 };
 
+/** 单向线性衰亡时间线（不循环，抵达终末后封顶） */
 export const ERA_ORDER: EraType[] = [
-  "golden",
-  "war",
-  "ecological_collapse",
-  "tech_singularity",
-  "pseudo_prosperity",
-  "winter",
-  "plague",
-  "revival",
-  "totalitarian",
-  "void",
+  "golden",              // 0  接纳度高 ← 建交窗口
+  "revival",             // 1  接纳度高 ← 建交窗口
+  "tech_singularity",    // 2
+  "pseudo_prosperity",   // 3
+  "totalitarian",        // 4  liar ← 识谎窗口
+  "winter",              // 5
+  "war",                 // 6
+  "plague",              // 7  liar ← 识谎窗口
+  "ecological_collapse", // 8  liar ← 识谎窗口
+  "void",                // 9
+  "primordial",          // 10 终末·洪荒重启
 ];
 
-/** 根据整局演化索引生成时代（循环） */
+/** 根据整局演化索引生成时代（线性不循环，抵达终末后永远停在洪荒） */
 export function createEra(index: number): EraProfile {
-  const eraType = ERA_ORDER[index % ERA_ORDER.length];
-  return ERA_LIBRARY[eraType];
+  const clamped = Math.min(index, ERA_ORDER.length - 1);
+  return ERA_LIBRARY[ERA_ORDER[clamped]];
 }

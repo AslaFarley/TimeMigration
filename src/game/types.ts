@@ -14,7 +14,8 @@ export type EraType =
   | "plague"
   | "revival"
   | "totalitarian"
-  | "void";
+  | "void"
+  | "primordial";
 
 /**
  * 叙述者风格（影响公开文本的偏差方向）
@@ -65,6 +66,10 @@ export interface WorldState {
   scoutForce: number;
   /** 本次睡眠时长（年） */
   sleepingYears: number;
+  /** 是否已在友好时代与原住文明建交（永久 buff，长睡损耗减半） */
+  allianceFormed: boolean;
+  /** 是否已识破说谎型叙述者（永久移除 liar 噪声反转） */
+  liarExposed: boolean;
 }
 
 /** 叙述面板的一行内容 */
@@ -89,6 +94,12 @@ export interface HistoryEntry {
   /** 真实参数快照，供未来 LLM 上下文使用 */
   truthSnapshot: Pick<WorldState, "habitability" | "acceptance" | "tech" | "capacity" | "trust">;
   narrative: string;
+  /** 本回合是否触发建交 */
+  allianceFormedThisTurn: boolean;
+  /** 本回合是否触发识破谎言 */
+  liarExposedThisTurn: boolean;
+  /** 长睡导致的本轮人口流失量 */
+  sleepLoss: number;
 }
 
 /** 玩家每轮的决策 */
@@ -100,7 +111,7 @@ export interface TurnDecision {
 
 /** 结局结果（第一版为规则化描述，未来由 LLM 扩写） */
 export interface EndingResult {
-  outcome: "success" | "failure";
+  outcome: "success" | "failure" | "rebirth";
   title: string;
   text: string;
   /** 结局条目列表（未来扩为千年叙事） */

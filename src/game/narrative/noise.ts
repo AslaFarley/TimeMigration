@@ -25,12 +25,14 @@ function buildScoutIntel(state: WorldState, scoutReturn: number): string | undef
 
 export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLine[] {
   const tone = state.era.tone;
-  const pool = SEED_LIBRARY[state.era.id][tone];
+  // 若已识破说谎者，liar 降级为 reliable
+  const effectiveTone = (state.liarExposed && tone === "liar") ? "reliable" : tone;
+  const pool = SEED_LIBRARY[state.era.id][effectiveTone];
   const seed = pick(pool, state.eraIndex + state.sleepingYears);
 
   // 基础生存指数（玩家可见的"综合指标"，带噪声）
   let displayIndex: number;
-  switch (tone) {
+  switch (effectiveTone) {
     case "optimistic":
       displayIndex = Math.min(99, (state.habitability + state.acceptance + state.tech) / 3 + 18);
       break;
@@ -46,20 +48,25 @@ export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLin
   }
 
   // 叙述者风格附注
-  const toneNote: Record<typeof tone, string> = {
+  const toneNote: Record<typeof effectiveTone, string> = {
     reliable:    "【叙述者：信息来源较为可靠】",
     optimistic:  "【叙述者：乐观倾向，可能夸大有利条件】",
     pessimistic: "【叙述者：悲观倾向，可能低估生存空间】",
     liar:        "【叙述者：信息来源存疑，部分内容可能与实际相反】",
   };
 
-  const publicText = `${seed.text} 综合生存指数约 ${Math.round(displayIndex)}。${toneNote[tone]}`;
+  const liarOverrideNote = (state.liarExposed && tone === "liar")
+    ? "（已识破谎言，本次信息已修正）" : "";
+
+  const publicText = `${seed.text} 综合生存指数约 ${Math.round(displayIndex)}。${toneNote[effectiveTone]}${liarOverrideNote}`;
 
   // 真值（历史面板显示）
+  const allianceNote = state.allianceFormed ? " [已建交·长睡损耗减半]" : "";
+  const liarNote = state.liarExposed ? " [已识破谎言·liar降级]" : "";
   const truthText =
     `[真实参数] 宜居度 ${fmt(state.habitability)}，接纳度 ${fmt(state.acceptance)}，` +
     `科技 ${fmt(state.tech)}，承载力 ${fmt(state.capacity)}，民心 ${fmt(state.trust)}。` +
-    `参考：${seed.truthHint}`;
+    `参考：${seed.truthHint}${allianceNote}${liarNote}`;
 
   const lines: NarrativeLine[] = [
     { title: seed.title, text: publicText, truthText },

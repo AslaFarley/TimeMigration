@@ -35,6 +35,17 @@ export default function HistoryPanel({ history }: { history: GameHistory }) {
                     <div className="history-row">
                       <span>人口变化：{entry.activeBefore.toLocaleString()} → {entry.activeAfter.toLocaleString()}</span>
                     </div>
+                    {entry.sleepLoss > 0 && (
+                      <div className="history-row">
+                        <span>长睡损耗：-{entry.sleepLoss.toLocaleString()} 人</span>
+                      </div>
+                    )}
+                    {(entry.allianceFormedThisTurn || entry.liarExposedThisTurn) && (
+                      <div className="history-row">
+                        {entry.allianceFormedThisTurn && <span>🤝 本回合建交</span>}
+                        {entry.liarExposedThisTurn && <span>👁 本回合识破谎言</span>}
+                      </div>
+                    )}
                     <div className="history-truth">
                       <strong>真实参数</strong>
                       <div className="history-row">

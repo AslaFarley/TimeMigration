@@ -56,9 +56,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, phase: "decision" };
 
     case "SETTLE_ALL": {
-      const ending = new RuleBasedEndingProvider().buildEnding(state.world, state.history);
-      return { ...state, phase: "ending", ending };
+      // 全体解冻：将剩余 frozenPop 全部并入 activePop，再结算结局
+      const settledWorld: WorldState = {
+        ...state.world,
+        activePop: state.world.activePop + state.world.frozenPop,
+        frozenPop: 0,
+      };
+      const ending = new RuleBasedEndingProvider().buildEnding(settledWorld, state.history);
+      return { ...state, phase: "ending", world: settledWorld, ending };
     }
+
 
     case "CONTINUE": {
       const turnResult = advanceWorld(state.world, action.decision);

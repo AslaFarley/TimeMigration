@@ -8,7 +8,8 @@ import { gameReducer, initialGameState } from "./state/gameStore";
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   const [secondsLeft, setSecondsLeft] = useState(60);
-  const [sleepingYears, setSleepingYears] = useState(8);
+  const [sleepingYears, setSleepingYears] = useState(100);
+
   const [sendScout, setSendScout] = useState(true);
 
   // ── 60秒倒计时（decision 阶段） ──────────────────────────
