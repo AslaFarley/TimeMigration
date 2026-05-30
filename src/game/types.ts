@@ -1,0 +1,121 @@
+// ─────────────────────────────────────────────────────────
+// 《时间移民》核心数据类型
+// 详见 DESIGN.md 第 4/5 节
+// ─────────────────────────────────────────────────────────
+
+/** 时代类型 */
+export type EraType =
+  | "golden"
+  | "war"
+  | "ecological_collapse"
+  | "tech_singularity"
+  | "pseudo_prosperity"
+  | "winter"
+  | "plague"
+  | "revival"
+  | "totalitarian"
+  | "void";
+
+/**
+ * 叙述者风格（影响公开文本的偏差方向）
+ * reliable  = 可靠，基本如实
+ * optimistic = 夸大好消息
+ * pessimistic = 强调代价
+ * liar      = 故意与真值矛盾
+ */
+export type NarrativeTone = "reliable" | "optimistic" | "pessimistic" | "liar";
+
+/** 先遣队改造任务目标 */
+export type MissionTarget = "acceptance" | "habitability";
+
+/** 时代配置档案 */
+export interface EraProfile {
+  id: EraType;
+  name: string;
+  description: string;
+  /** 客观环境好坏（天灾维度），0-100 */
+  baseHabitability: number;
+  /** 原住文明欢迎度（人祸维度），0-100 */
+  baseAcceptance: number;
+  /** 科技水平，0-100 */
+  baseTech: number;
+  /** 人口承载力 */
+  baseCapacity: number;
+  /** 民心/信任，0-100，归零则失败 */
+  baseTrust: number;
+  /** 当前时代叙述者风格 */
+  tone: NarrativeTone;
+}
+
+/** 完整世界状态（每次苏醒的快照） */
+export interface WorldState {
+  /** 当前在 ERA_ORDER 中的索引 */
+  eraIndex: number;
+  era: EraProfile;
+  habitability: number;
+  acceptance: number;
+  tech: number;
+  capacity: number;
+  trust: number;
+  /** 剩余冷冻人口（先遣队来源池） */
+  frozenPop: number;
+  /** 已解冻、在当前时代活跃的人口 */
+  activePop: number;
+  /** 当前派出在外尚未归队的先遣队人数 */
+  scoutForce: number;
+  /** 本次睡眠时长（年） */
+  sleepingYears: number;
+}
+
+/** 叙述面板的一行内容 */
+export interface NarrativeLine {
+  title: string;
+  /** 对玩家展示的叙述文本（含噪声/偏差） */
+  text: string;
+  /** 真实参数注记（可在历史面板对比） */
+  truthText?: string;
+}
+
+/** 每轮历史记录条目 */
+export interface HistoryEntry {
+  turn: number;
+  eraName: string;
+  sleepingYears: number;
+  decision: "settle" | "continue";
+  sentScout: boolean;
+  scoutReturn: number;
+  activeBefore: number;
+  activeAfter: number;
+  /** 真实参数快照，供未来 LLM 上下文使用 */
+  truthSnapshot: Pick<WorldState, "habitability" | "acceptance" | "tech" | "capacity" | "trust">;
+  narrative: string;
+}
+
+/** 玩家每轮的决策 */
+export interface TurnDecision {
+  settleAll: boolean;
+  sleepingYears: number;
+  sendScout: boolean;
+}
+
+/** 结局结果（第一版为规则化描述，未来由 LLM 扩写） */
+export interface EndingResult {
+  outcome: "success" | "failure";
+  title: string;
+  text: string;
+  /** 结局条目列表（未来扩为千年叙事） */
+  timeline: string[];
+}
+
+/** 完整历史轨迹（确保未来 LLM 上下文数据现成） */
+export interface GameHistory {
+  entries: HistoryEntry[];
+}
+
+/** worldEngine.advanceWorld 的返回值 */
+export interface GameTurnResult {
+  state: WorldState;
+  narrative: NarrativeLine[];
+  historyEntry: HistoryEntry;
+  scoutReturn: number;
+}
