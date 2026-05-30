@@ -14,13 +14,33 @@ function fmt(value: number) {
   return Math.round(value).toString();
 }
 
-/** 生成"先遣队情报"（真实存活率，比公开叙述可靠） */
+/**
+ * 生成"先遣队情报"（文学化描述，不暴露具体世界参数数值）
+ * 情报反映的是下一次苏醒年代（即先遣队实际经历的时代）的真实环境。
+ */
 function buildScoutIntel(state: WorldState, scoutReturn: number): string | undefined {
   if (state.scoutForce <= 0 && scoutReturn <= 0) return undefined;
-  const returnPct = state.scoutForce > 0
-    ? Math.round((scoutReturn / state.scoutForce) * 100)
+  const sentCount = state.scoutForce + scoutReturn;
+  const returnPct = sentCount > 0
+    ? Math.round((scoutReturn / sentCount) * 100)
     : 0;
-  return `【先遣队内部报告】本次归队 ${scoutReturn} 人，存活率约 ${returnPct}%，实测宜居度 ${fmt(state.habitability)}，接纳度 ${fmt(state.acceptance)}。`;
+
+  // 模糊的文学化描述，不包含具体数值
+  const survivalDesc =
+    returnPct >= 80 ? "大部分成员成功穿越时间屏障，带回珍贵见闻。"
+    : returnPct >= 50 ? "约半数成员存活归来，带回前方的零散信息。"
+    : returnPct >= 30 ? "仅少数成员狼狈返回，氛围凝重。"
+    : "极少数成员艰难生还，沉默中传递着不祥的预感。";
+
+  // 环境印象（模糊定性，不报数值）
+  const envImpression = state.habitability >= 70 ? "环境尚可"
+    : state.habitability >= 40 ? "环境险峻"
+    : "环境极为严酷";
+  const socialImpression = state.acceptance >= 70 ? "原住文明态度友善"
+    : state.acceptance >= 40 ? "原住文明态度冷漠"
+    : "原住文明充满敌意";
+
+  return `【先遣队内部报告】先遣队从目标时代归来。${survivalDesc}综合印象：${envImpression}，${socialImpression}。`;
 }
 
 export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLine[] {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SLEEP_LINES = [
   "先遣队已出发，载着希望驶入未知的时间长河……",
@@ -8,34 +8,58 @@ const SLEEP_LINES = [
 ];
 
 interface Props {
-  /** 当前沉睡的状态消息（来自 gameStore） */
+  /** 当前沉睡的状态消息 */
   message: string;
-  /**
-   * 内容就绪时调用（第一版：固定延迟；未来可传入 LLM Promise）
-   * 设计意图：此组件在 onDone 回调触发前保持展示，
-   * 可直接把 LLM 请求 Promise 的 resolve 接到 onDone，无需改 UI。
-   */
-  onDone: () => void;
+  /** LLM 连通状态 */
+  llmStatus: "pending" | "ok" | "fail";
+  /** LLM 叙述是否已就绪 */
+  narrativeReady: boolean;
+  /** 玩家点击"缓缓苏醒"时调用 */
+  onAwaken: () => void;
 }
 
-export default function SleepTransition({ message, onDone }: Props) {
-  const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+export default function SleepTransition({ message, llmStatus, narrativeReady, onAwaken }: Props) {
+  const onAwakenRef = useRef(onAwaken);
+  onAwakenRef.current = onAwaken;
 
+  const [buttonVisible, setButtonVisible] = useState(false);
+
+  // 当 narrativeReady 变为 true 时，延迟一小会儿再显示按钮（营造缓缓出现效果）
   useEffect(() => {
-    // 第一版：固定展示 2.4 秒
-    const id = window.setTimeout(() => onDoneRef.current(), 2400);
+    if (!narrativeReady) return;
+    const id = window.setTimeout(() => setButtonVisible(true), 600);
     return () => window.clearTimeout(id);
-  }, []);   // 只在挂载时启动一次
+  }, [narrativeReady]);
 
   // 随机选一条额外氛围文字
   const extra = SLEEP_LINES[Math.floor(Date.now() / 1000) % SLEEP_LINES.length];
+
+  const llmLabel: Record<typeof llmStatus, string> = {
+    pending: "⏳ 正在连接叙述者…",
+    ok: "✅ 已连接叙述者",
+    fail: "⚠ 叙述者连接失败，使用本地记录",
+  };
 
   return (
     <div className="sleep-overlay">
       <div className="sleep-card">
         <div className="sleep-main">{message}</div>
         <div className="sleep-extra">{extra}</div>
+
+        {/* LLM 连通状态 */}
+        <div className={`sleep-llm-status sleep-llm--${llmStatus}`}>
+          {llmLabel[llmStatus]}
+        </div>
+
+        {/* 缓缓苏醒按钮（淡入） */}
+        <div className={`sleep-awaken-btn-wrap${buttonVisible ? " sleep-awaken-btn-wrap--show" : ""}`}>
+          <button
+            className="primary awaken-btn"
+            onClick={() => onAwakenRef.current()}
+          >
+            缓缓苏醒
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -11,9 +11,11 @@ export type GamePhase =
   | "intro"       // 开始界面
   | "decision"    // 决策阶段（限时 60s）
   | "sleep"       // 沉睡过渡（LLM 缓冲）
-  | "awaken"      // 苏醒结算展示
   | "game_over"   // 民心归零失败
   | "ending";     // 主动全体解冻结局
+
+/** 最大睡眠次数，耗尽后只能全体解冻 */
+export const MAX_SLEEPS = 7;
 
 // ── 状态 ──────────────────────────────────────────────────
 export interface GameState {
@@ -28,6 +30,8 @@ export interface GameState {
   endingPending: boolean;
   sleepMessage: string;
   trustWarning: boolean;
+  /** 已完成的睡眠次数 */
+  sleepCount: number;
 }
 
 // ── Actions ───────────────────────────────────────────────
@@ -35,7 +39,6 @@ export type GameAction =
   | { type: "START" }
   | { type: "SETTLE_ALL" }
   | { type: "CONTINUE"; decision: TurnDecision }
-  | { type: "AWAKEN_DONE" }
   | { type: "BACK_TO_DECISION" }
   | { type: "RESET" }
   | { type: "SET_NARRATIVE"; narrative: { title: string; text: string; truthText?: string }[] }
@@ -51,6 +54,7 @@ export const initialGameState: GameState = {
   endingPending: false,
   sleepMessage: "你进入了深度睡眠，思绪万千，不知再睁眼时世界是何模样……",
   trustWarning: false,
+  sleepCount: 0,
 };
 
 // ── Reducer ───────────────────────────────────────────────
@@ -72,8 +76,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, phase: "ending", world: settledWorld, ending, endingPending: true };
     }
 
-
     case "CONTINUE": {
+      const newSleepCount = state.sleepCount + 1;
       const turnResult = advanceWorld(state.world, action.decision);
       const newWorld   = turnResult.state;
       const newHistory: GameHistory = {
@@ -100,11 +104,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         sleepMessage:    sleepMsg,
         trustWarning,
         endingPending:   gameOver ? true : state.endingPending,
+        sleepCount:      newSleepCount,
       };
     }
-
-    case "AWAKEN_DONE":
-      return { ...state, phase: state.phase === "sleep" ? "awaken" : state.phase };
 
     case "BACK_TO_DECISION":
       return { ...state, phase: "decision" };

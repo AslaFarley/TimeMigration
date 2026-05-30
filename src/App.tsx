@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import AwakenScreen from "./components/AwakenScreen";
 import DecisionScreen from "./components/DecisionScreen";
 import EndScreen from "./components/EndScreen";
 import SleepTransition from "./components/SleepTransition";
-import { gameReducer, initialGameState } from "./state/gameStore";
+import { gameReducer, initialGameState, MAX_SLEEPS } from "./state/gameStore";
 import { getLLMNarrative } from "./game/narrative/llmProvider";
 import { buildLLMEnding } from "./game/ending/llmProvider";
 
@@ -11,8 +10,11 @@ export default function App() {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [sleepingYears, setSleepingYears] = useState(100);
-
   const [sendScout, setSendScout] = useState(true);
+
+  // ── LLM 状态（沉睡界面展示用） ──────────────────────────
+  const [llmPingStatus, setLlmPingStatus] = useState<"pending" | "ok" | "fail">("pending");
+  const [llmNarrativeReady, setLlmNarrativeReady] = useState(false);
 
   // 防止重复触发 LLM 请求
   const narrativeFiredRef = useRef(false);
@@ -57,32 +59,36 @@ export default function App() {
 
     const fallback = state.latestNarrative;
 
-    // 并行等待 LLM + 最短展示时间 2.4s
+    setLlmPingStatus("pending");
+    setLlmNarrativeReady(false);
+
     const llmPromise = getLLMNarrative(
       state.world,
       state.scoutReturnLast,
       fallback,
     );
 
+    // 并行等待 LLM + 最短展示时间 2.4s
     Promise.all([
       llmPromise,
       new Promise((r) => setTimeout(r, 2400)),
     ])
       .then(([narrative]) => {
         if (abort.signal.aborted) return;
+        setLlmPingStatus("ok");
         dispatch({ type: "SET_NARRATIVE", narrative });
-        dispatch({ type: "AWAKEN_DONE" });
+        setLlmNarrativeReady(true);
       })
       .catch(() => {
         if (abort.signal.aborted) return;
-        // 失败也继续（已有种子兜底在 latestNarrative 中）
-        dispatch({ type: "AWAKEN_DONE" });
+        setLlmPingStatus("fail");
+        setLlmNarrativeReady(true);
       });
 
     return () => {
       abort.abort();
     };
-  }, [state.phase, state.world.era.id]); // era.id 变化 = 新一轮
+  }, [state.phase, state.world.era.id]);
 
   // ── ending / game_over 阶段：触发 LLM 千年史生成 ────────
   useEffect(() => {
@@ -101,7 +107,6 @@ export default function App() {
       })
       .catch(() => {
         if (abort.signal.aborted) return;
-        // 规则兜底已在 SETTLE_ALL / game_over 时写入
         if (state.ending) {
           dispatch({ type: "SET_ENDING", ending: state.ending });
         }
@@ -117,6 +122,8 @@ export default function App() {
     if (state.phase === "intro") {
       narrativeFiredRef.current = false;
       endingFiredRef.current = false;
+      setLlmPingStatus("pending");
+      setLlmNarrativeReady(false);
     }
   }, [state.phase]);
 
@@ -137,6 +144,9 @@ export default function App() {
       decision: { settleAll: false, sleepingYears, sendScout },
     });
   }, [sleepingYears, sendScout]);
+
+  const sleepsRemaining = Math.max(0, MAX_SLEEPS - state.sleepCount);
+  const sleepsExhausted = sleepsRemaining <= 0;
 
   // ── 渲染各阶段 ───────────────────────────────────────────
   if (state.phase === "intro") {
@@ -160,19 +170,9 @@ export default function App() {
     return (
       <SleepTransition
         message={state.sleepMessage}
-        onDone={() => dispatch({ type: "AWAKEN_DONE" })}
-      />
-    );
-  }
-
-  if (state.phase === "awaken") {
-    return (
-      <AwakenScreen
-        eraName={state.world.era.name}
-        narrative={state.latestNarrative}
-        scoutReturn={state.scoutReturnLast}
-        trustWarning={state.trustWarning}
-        onContinue={() => dispatch({ type: "BACK_TO_DECISION" })}
+        llmStatus={llmPingStatus}
+        narrativeReady={llmNarrativeReady}
+        onAwaken={() => dispatch({ type: "BACK_TO_DECISION" })}
       />
     );
   }
@@ -219,6 +219,8 @@ export default function App() {
       sendScout={sendScout}
       setSendScout={setSendScout}
       trustWarning={state.trustWarning}
+      sleepsRemaining={sleepsRemaining}
+      sleepsExhausted={sleepsExhausted}
       onSettleAll={() => dispatch({ type: "SETTLE_ALL" })}
       onContinue={handleContinue}
     />

@@ -13,6 +13,10 @@ interface Props {
   sendScout: boolean;
   setSendScout: (v: boolean) => void;
   trustWarning: boolean;
+  /** 剩余睡眠次数 */
+  sleepsRemaining: number;
+  /** 睡眠次数已耗尽 */
+  sleepsExhausted: boolean;
   onSettleAll: () => void;
   onContinue: () => void;
 }
@@ -27,6 +31,8 @@ export default function DecisionScreen({
   sendScout,
   setSendScout,
   trustWarning,
+  sleepsRemaining,
+  sleepsExhausted,
   onSettleAll,
   onContinue,
 }: Props) {
@@ -80,7 +86,16 @@ export default function DecisionScreen({
           </div>
         )}
 
-        {/* 叙述面板 */}
+        {/* 剩余睡眠次数提示 */}
+        <div className={`remaining-sleeps-hint${sleepsExhausted ? " remaining-sleeps-hint--exhausted" : ""}`}>
+          {sleepsExhausted ? (
+            <>睡眠次数已耗尽，只能 <strong>全体解冻</strong></>
+          ) : (
+            <>当前第 <strong>{world.eraIndex + 1}</strong> 个时代 · 最多还能睡眠 <strong>{sleepsRemaining}</strong> 次</>
+          )}
+        </div>
+
+        {/* 叙述面板（含先遣队情报） */}
         <NarrativePanel lines={narrative} />
 
         {/* 操控区 */}
@@ -132,13 +147,26 @@ export default function DecisionScreen({
           )}
         </div>
 
-        {/* 行动按钮 */}
-        <div className="action-row">
-          <button className="btn-settle" onClick={onSettleAll}>
-            全体解冻定居
+        {/* ── 核心决策区（最醒目的两块） ── */}
+        <div className="fate-decision">
+          <button className="fate-btn fate-btn--settle" onClick={onSettleAll}>
+            <span className="fate-btn__title">🏠 全体解冻定居</span>
+            <span className="fate-btn__desc">
+              将剩余 {Math.round(world.frozenPop).toLocaleString()} 名冷冻人口全部唤醒，定居于此时代，结束移民之旅
+            </span>
           </button>
-          <button className="primary btn-continue" onClick={onContinue}>
-            确认决策，继续沉睡
+
+          <button
+            className={`fate-btn fate-btn--sleep${sleepsExhausted ? " fate-btn--disabled" : ""}`}
+            onClick={onContinue}
+            disabled={sleepsExhausted}
+          >
+            <span className="fate-btn__title">❄️ 确认决策，继续沉睡</span>
+            <span className="fate-btn__desc">
+              {sleepsExhausted
+                ? "睡眠次数已耗尽，请全体解冻定居"
+                : `沉睡 ${sleepingYears} 年，${sendScout ? "派出先遣队探索前方" : "直接跃向下一个时代"}`}
+            </span>
           </button>
         </div>
       </div>

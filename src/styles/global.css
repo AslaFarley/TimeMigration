@@ -254,6 +254,88 @@ button:active { transform: scale(0.97); }
 }
 .btn-continue { font-size: 0.95rem; }
 
+/* ── Remaining sleeps hint ─────────────────────────────── */
+.remaining-sleeps-hint {
+  font-size: 0.82rem;
+  color: var(--c-muted);
+  text-align: center;
+  padding: 0.45rem 0.8rem;
+  background: rgba(108, 140, 255, 0.06);
+  border: 1px solid var(--c-border);
+  border-radius: 0.6rem;
+}
+.remaining-sleeps-hint strong {
+  color: var(--c-teal);
+  font-size: 1rem;
+}
+.remaining-sleeps-hint--exhausted {
+  color: var(--c-danger);
+  background: rgba(252, 129, 129, 0.08);
+  border-color: rgba(252, 129, 129, 0.3);
+}
+.remaining-sleeps-hint--exhausted strong {
+  color: var(--c-danger);
+}
+
+/* ── Fate Decision Buttons (核心决策) ──────────────────── */
+.fate-decision {
+  display: flex;
+  gap: var(--gap);
+}
+.fate-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+  border-radius: 0.9rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.fate-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.fate-btn:active {
+  transform: scale(0.98);
+}
+.fate-btn__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.fate-btn__desc {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.fate-btn--settle {
+  background: linear-gradient(135deg, rgba(104, 211, 145, 0.15), rgba(79, 209, 197, 0.1));
+  border-color: var(--c-success);
+  color: var(--c-success);
+}
+.fate-btn--settle:hover {
+  background: linear-gradient(135deg, rgba(104, 211, 145, 0.25), rgba(79, 209, 197, 0.18));
+}
+
+.fate-btn--sleep {
+  background: linear-gradient(135deg, rgba(108, 140, 255, 0.12), rgba(108, 140, 255, 0.06));
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+.fate-btn--sleep:hover {
+  background: linear-gradient(135deg, rgba(108, 140, 255, 0.22), rgba(108, 140, 255, 0.14));
+}
+.fate-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ─────────────────────────────────────────────────────────
    HISTORY PANEL
    ───────────────────────────────────────────────────────── */
@@ -329,8 +411,48 @@ button:active { transform: scale(0.97); }
   font-style: italic;
 }
 
+/* ── LLM 连接状态 ── */
+.sleep-llm-status {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  align-self: center;
+  opacity: 0.9;
+}
+.sleep-llm--pending {
+  color: var(--c-muted);
+  background: rgba(255,255,255,0.04);
+  animation: endPulse 1.5s ease-in-out infinite;
+}
+.sleep-llm--ok {
+  color: var(--c-success);
+  background: rgba(104, 211, 145, 0.1);
+}
+.sleep-llm--fail {
+  color: var(--c-warn);
+  background: rgba(246, 173, 85, 0.1);
+}
+
+/* ── 缓缓苏醒按钮（淡入） ── */
+.sleep-awaken-btn-wrap {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+  pointer-events: none;
+}
+.sleep-awaken-btn-wrap--show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.awaken-btn {
+  font-size: 1rem;
+  padding: 0.85rem 2.4rem;
+}
+
 /* ─────────────────────────────────────────────────────────
-   AWAKEN / CENTER
+   AWAKEN / CENTER (保留兼容，已不再使用 AwakenScreen)
    ───────────────────────────────────────────────────────── */
 .center-layout {
   min-height: 100vh;
@@ -338,7 +460,6 @@ button:active { transform: scale(0.97); }
   place-items: center;
   padding: 2rem;
 }
-
 .awaken-panel {
   width: min(680px, 100%);
   display: flex;

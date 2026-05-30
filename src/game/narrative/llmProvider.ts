@@ -5,7 +5,6 @@
  */
 import type { NarrativeLine, WorldState } from "../types";
 import { chatJSON } from "../llm/client";
-import { buildNarrative } from "./noise";
 
 interface LLMNarrativeJSON {
   title: string;
@@ -18,7 +17,7 @@ function format(v: number) {
 
 export async function getLLMNarrative(
   state: WorldState,
-  scoutReturn: number,
+  _scoutReturn: number,
   fallback: NarrativeLine[],
 ): Promise<NarrativeLine[]> {
   try {
