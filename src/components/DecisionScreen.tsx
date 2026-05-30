@@ -57,10 +57,6 @@ export default function DecisionScreen({
             <span className="stat-label">冷冻人口</span>
             <span className="stat-value">{Math.round(world.frozenPop)}</span>
           </div>
-          <div className="stat-badge">
-            <span className="stat-label">活跃人口</span>
-            <span className="stat-value">{Math.round(world.activePop)}</span>
-          </div>
         </div>
 
         {/* 永久buff徽章 */}

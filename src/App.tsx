@@ -183,9 +183,8 @@ export default function App() {
       title: `${state.world.era.name}——政变爆发`,
       text: "民心归零，移民内部的信任彻底崩溃。这次迁移没有到达终点，但留下了不会被遗忘的痕迹。",
       timeline: [
-        `· 共经历 ${state.history.entries.length} 个时代`,
-        `· 最终时代：${state.world.era.name}`,
-        `· 民心归零，政变终结了这次旅程`,
+        `· 信任崩溃，政变终结了这次旅程`,
+        `· 幸存者散落于荒野，再无统一意志`,
       ],
     };
     return (
