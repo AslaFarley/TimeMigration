@@ -5,6 +5,7 @@
 
 /** 时代类型 */
 export type EraType =
+  | "war_aftermath"
   | "golden"
   | "war"
   | "ecological_collapse"

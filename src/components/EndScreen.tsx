@@ -35,10 +35,6 @@ export default function EndScreen({ ending, onReset, loading }: Props) {
           </ul>
         )}
 
-        <p className="muted end-hint">
-          成败由你解读。未来版本将由 AI 为这段历史续写千年叙事。
-        </p>
-
         <button className="primary end-reset" onClick={onReset} disabled={loading}>
           重新开始
         </button>

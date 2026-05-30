@@ -30,23 +30,6 @@ export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLin
   const pool = SEED_LIBRARY[state.era.id][effectiveTone];
   const seed = pick(pool, state.eraIndex + state.sleepingYears);
 
-  // 基础生存指数（玩家可见的"综合指标"，带噪声）
-  let displayIndex: number;
-  switch (effectiveTone) {
-    case "optimistic":
-      displayIndex = Math.min(99, (state.habitability + state.acceptance + state.tech) / 3 + 18);
-      break;
-    case "pessimistic":
-      displayIndex = Math.max(1, (state.habitability + state.acceptance + state.tech) / 3 - 15);
-      break;
-    case "liar":
-      // 故意反转：低的说高，高的说低
-      displayIndex = 100 - (state.habitability + state.acceptance + state.tech) / 3;
-      break;
-    default:
-      displayIndex = (state.habitability + state.acceptance + state.tech) / 3;
-  }
-
   // 叙述者风格附注
   const toneNote: Record<typeof effectiveTone, string> = {
     reliable:    "【叙述者：信息来源较为可靠】",
@@ -58,7 +41,7 @@ export function buildNarrative(state: WorldState, scoutReturn = 0): NarrativeLin
   const liarOverrideNote = (state.liarExposed && tone === "liar")
     ? "（已识破谎言，本次信息已修正）" : "";
 
-  const publicText = `${seed.text} 综合生存指数约 ${Math.round(displayIndex)}。${toneNote[effectiveTone]}${liarOverrideNote}`;
+  const publicText = `${seed.text} ${toneNote[effectiveTone]}${liarOverrideNote}`;
 
   // 真值（历史面板显示）
   const allianceNote = state.allianceFormed ? " [已建交·长睡损耗减半]" : "";

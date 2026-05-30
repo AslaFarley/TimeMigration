@@ -30,9 +30,8 @@ export class RuleBasedEndingProvider implements EndingProvider {
             `· 最终抵达：洪荒重启`,
             `· 幸存人口：${Math.round(totalPop).toLocaleString()}`,
             `· 已与原住文明建交，继承了文明重建的智慧`,
-            ``,
-            `（未来版本将由 LLM 续写重建历程。）`,
-          ],
+          ``,
+        ],
         };
       }
       // 不够条件 → 勉强存活但算不上成功
@@ -81,7 +80,6 @@ export class RuleBasedEndingProvider implements EndingProvider {
       `· 民心：${Math.round(state.trust)}`,
       `· 宜居度：${Math.round(state.habitability)} / 接纳度：${Math.round(state.acceptance)} / 科技：${Math.round(state.tech)}`,
       ``,
-      `（未来版本将由 LLM 将上述历史轨迹扩写为千年发展史叙事。）`,
     ];
 
     return { outcome, title, text, timeline };

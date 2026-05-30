@@ -17,15 +17,6 @@ interface Props {
   onContinue: () => void;
 }
 
-function StatBadge({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="stat-badge">
-      <span className="stat-label">{label}</span>
-      <span className="stat-value">{Math.round(value)}</span>
-    </div>
-  );
-}
-
 export default function DecisionScreen({
   world,
   history,
@@ -54,15 +45,16 @@ export default function DecisionScreen({
           <Timer secondsLeft={secondsLeft} />
         </div>
 
-        {/* 状态格 */}
+        {/* 人口概览 */}
         <div className="stats-grid panel">
-          <StatBadge label="宜居度" value={world.habitability} />
-          <StatBadge label="接纳度" value={world.acceptance} />
-          <StatBadge label="科技"   value={world.tech} />
-          <StatBadge label="民心"   value={world.trust} />
-          <StatBadge label="承载力" value={world.capacity} />
-          <StatBadge label="冷冻人口" value={world.frozenPop} />
-          <StatBadge label="活跃人口" value={world.activePop} />
+          <div className="stat-badge">
+            <span className="stat-label">冷冻人口</span>
+            <span className="stat-value">{Math.round(world.frozenPop)}</span>
+          </div>
+          <div className="stat-badge">
+            <span className="stat-label">活跃人口</span>
+            <span className="stat-value">{Math.round(world.activePop)}</span>
+          </div>
         </div>
 
         {/* 永久buff徽章 */}

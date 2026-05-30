@@ -126,7 +126,7 @@ export default function App() {
     return [
       {
         title: state.world.era.name,
-        text: `你携带 ${state.world.frozenPop.toLocaleString()} 名冷冻移民抵达时间彼岸。${state.world.era.description}`,
+        text: `冷冻舱缓缓开启，你望向这片陌生的大地。${state.world.era.description}`,
       },
     ];
   }, [state.latestNarrative, state.world.era, state.world.frozenPop]);
@@ -185,10 +185,7 @@ export default function App() {
       timeline: [
         `· 共经历 ${state.history.entries.length} 个时代`,
         `· 最终时代：${state.world.era.name}`,
-        `· 活跃人口：${state.world.activePop.toLocaleString()}`,
         `· 民心归零，政变终结了这次旅程`,
-        ``,
-        `（正在生成 AI 千年发展史…）`,
       ],
     };
     return (

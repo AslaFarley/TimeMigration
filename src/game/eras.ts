@@ -1,6 +1,17 @@
 import type { EraProfile, EraType } from "./types";
 
 export const ERA_LIBRARY: Record<EraType, EraProfile> = {
+  war_aftermath: {
+    id: "war_aftermath",
+    name: "战后废土",
+    description: "战争刚刚结束，城市沦为废墟，幸存者在残骸中搜寻余烬。秩序尚未重建，一切从零开始。",
+    baseHabitability: 35,
+    baseAcceptance: 28,
+    baseTech: 22,
+    baseCapacity: 32000,
+    baseTrust: 26,
+    tone: "pessimistic",
+  },
   golden: {
     id: "golden",
     name: "黄金时代",
@@ -126,13 +137,13 @@ export const ERA_LIBRARY: Record<EraType, EraProfile> = {
 
 /** 单向线性衰亡时间线（不循环，抵达终末后封顶） */
 export const ERA_ORDER: EraType[] = [
-  "golden",              // 0  接纳度高 ← 建交窗口
-  "revival",             // 1  接纳度高 ← 建交窗口
-  "tech_singularity",    // 2
-  "pseudo_prosperity",   // 3
-  "totalitarian",        // 4  liar ← 识谎窗口
-  "winter",              // 5
-  "war",                 // 6
+  "war_aftermath",       // 0  战后废土·开局
+  "winter",              // 1
+  "pseudo_prosperity",   // 2
+  "revival",             // 3  接纳度高 ← 建交窗口
+  "golden",              // 4  接纳度高 ← 建交窗口（峰值）
+  "tech_singularity",    // 5
+  "totalitarian",        // 6  liar ← 识谎窗口
   "plague",              // 7  liar ← 识谎窗口
   "ecological_collapse", // 8  liar ← 识谎窗口
   "void",                // 9

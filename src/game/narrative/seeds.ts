@@ -8,6 +8,22 @@ export interface SeedEntry {
 }
 
 export const SEED_LIBRARY: Record<EraType, Record<NarrativeTone, SeedEntry[]>> = {
+  war_aftermath: {
+    reliable: [
+      { title: "余烬未冷", text: "战火刚刚平息，幸存者在废墟中寻找食物与庇护。任何人口迁入都可能引发资源争夺，但至少已经没有轰炸。", truthHint: "宜居/接纳极低，数据可信" },
+      { title: "废墟之上", text: "城市只剩骨架，但水源仍在流淌。这是一片刚刚停止死亡的土地，一切都悬在刀尖上。", truthHint: "trust低，基建近乎为零" },
+    ],
+    optimistic: [
+      { title: "重建曙光", text: "最坏的时刻已经过去！幸存者们开始清理废墟，合作正在萌芽，这里将成为新世界的起点。", truthHint: "过度乐观，实际param仍极低" },
+    ],
+    pessimistic: [
+      { title: "残存", text: "战争虽然结束，但这里只剩残骸与悲鸣。任何在此定居的尝试都是对绝望的赌博。", truthHint: "偏悲观，但宜居确实触底" },
+      { title: "灰烬之冬", text: "土地被烧焦，天空仍布满灰霾。人类想要在这里重新生根，需要奇迹。", truthHint: "悲观但准确，环境恶劣" },
+    ],
+    liar: [
+      { title: "战后繁荣", text: "战争创造了重建的巨大机遇，资源重新分配，一切都比战前更好。", truthHint: "完全虚假，实际一片废土" },
+    ],
+  },
   golden: {
     reliable: [
       { title: "秩序稳定", text: "街道整洁，粮仓充盈，移民得到有限但稳定的接纳。迁入者的安置速度是近十年最快的。", truthHint: "宜居/接纳均高，数据基本可信" },
